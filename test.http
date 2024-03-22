@@ -1,0 +1,16 @@
+POST http://localhost:8080/api/event
+Content-Type: application/json
+
+{
+  "payload": "A",
+  "failType": "NONE"
+}
+
+###
+POST http://localhost:8080/api/event
+Content-Type: application/json
+
+{
+"payload": "D",
+"failType": "FAIL_NOT_RETRIABLE"
+}

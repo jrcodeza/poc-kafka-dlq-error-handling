@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: poc-kafka-dlq-error-handling
+
+  cloud:
+    function:
+      definition: eventProducer;myEventHandler;myEventHandlerDlq
+    stream:
+      kafka:
+        default:
+          producer:
+            configuration:
+              key.serializer: org.apache.kafka.common.serialization.StringSerializer
+              value.serializer: org.springframework.kafka.support.serializer.JsonSerializer
+          consumer:
+            configuration:
+              key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+              value.deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+              auto.offset.reset: earliest
+              spring.json.trusted.packages: '*'
+        binder:
+          brokers: localhost:29092
+          replication-factor: 1
+        bindings:
+          myEventHandler-in-0:
+            consumer:
+              enable-dlq: true
+              dlq-name: MY_EVENT_TOPIC_DLQ
+              dlq-producer-properties:
+                configuration:
+                  key.serializer: org.apache.kafka.common.serialization.StringSerializer
+                  value.serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      bindings:
+        eventProducer-out-0:
+          destination: MY_EVENT_TOPIC
+          group: test-cg
+        myEventHandler-in-0:
+          destination: MY_EVENT_TOPIC
+          group: test-cg
+          consumer:
+            max-attempts: 1
+            default-retryable: true
+        myEventHandlerDlq-in-0:
+          destination: MY_EVENT_TOPIC_DLQ
+          group: test-cg
+          consumer:
+            max-attempts: 3
+            back-off-initial-interval: 3000
